@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Kelereng Nusantara — Petualangan Matematika</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet">
+    <script>
+        MathJax = { tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] }, svg: { fontCache: 'global' } };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+    <style>
+        :root {
+            --kuning-emas: #FFD700; --biru-langit: #87CEEB; --hijau-daun: #7CCD7C;
+            --pastel-hangat: #FFF5E6; --merah-cepat: #FF6B6B;
+            --shadow-soft: 0 8px 24px rgba(0,0,0,0.15);
+            --shadow-hover: 0 12px 32px rgba(0,0,0,0.25);
+            --radius-kids: 24px;
+        }
+        * { -webkit-tap-highlight-color: transparent; }
+        body {
+            font-family: 'Comic Neue', cursive;
+            background: linear-gradient(135deg, #FFF5E6 0%, #FFE4B5 50%, #87CEEB 100%);
+            min-height: 100vh; min-height: 100dvh; overflow-x: hidden;
+            margin: 0; display: flex; align-items: center; justify-content: center;
+            background-attachment: fixed;
+        }
+        body::before {
+            content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: radial-gradient(circle at 20% 30%, rgba(255,215,0,0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(135,206,235,0.2) 0%, transparent 50%);
+            pointer-events: none; z-index: 0;
+        }
+        .game-wrapper { position: relative; z-index: 1; width: 100%; max-width: 900px; padding: 12px; margin: auto; }
+        .screen { display: none; animation: fadeSlideIn 0.5s cubic-bezier(0.34,1.56,0.64,1); }
+        .screen.active { display: block; }
+        @keyframes fadeSlideIn { from { opacity:0; transform:translateY(24px) scale(0.97); } to { opacity:1; transform:translateY(0) scale(1); } }
+        .kids-card {
+            background: rgba(255,255,255,0.92); backdrop-filter: blur(8px);
+            border-radius: var(--radius-kids); box-shadow: var(--shadow-soft);
+            border: 3px solid rgba(255,215,0,0.4); padding: 1.5rem;
+        }
+        @media (min-width: 768px) { .kids-card { padding: 2rem 2.5rem; } }
+        .game-title { font-family:'Fredoka One',cursive; color:#E67E22; text-shadow:2px 2px 0 #FFD700,4px 4px 0 rgba(0,0,0,0.1); font-size:1.8rem; }
+        @media (min-width:768px) { .game-title { font-size:2.8rem; } }
+        .subtitle { font-family:'Comic Neue'; color:#6B8E23; font-weight:700; font-size:1rem; }
+        .btn-kids {
+            font-family:'Fredoka One',cursive; border-radius:50px; padding:12px 32px; font-size:1.15rem;
+            border:none; transition:all 0.25s cubic-bezier(0.34,1.56,0.64,1);
+            box-shadow:0 6px 0 rgba(0,0,0,0.15); cursor:pointer; min-height:52px; min-width:140px;
+        }
+        .btn-kids:hover { transform:translateY(-4px) scale(1.04); box-shadow:0 10px 0 rgba(0,0,0,0.18),var(--shadow-hover); }
+        .btn-kids:active { transform:translateY(2px) scale(0.98); box-shadow:0 3px 0 rgba(0,0,0,0.15); }
+        .btn-kuning { background:linear-gradient(180deg,#FFD700,#F0C000); color:#5D4037; }
+        .btn-biru { background:linear-gradient(180deg,#87CEEB,#5BA3C7); color:#fff; }
+        .btn-hijau { background:linear-gradient(180deg,#7CCD7C,#5BA85B); color:#fff; }
+        .btn-ungu { background:linear-gradient(180deg,#C084FC,#A855F7); color:#fff; }
+        .answer-btn {
+            font-family:'Comic Neue'; font-weight:700; font-size:1.1rem; padding:16px 20px;
+            border-radius:18px; border:3px solid #ddd; background:#fff; width:100%;
+            transition:all 0.2s ease; box-shadow:0 4px 0 #ccc; min-height:60px;
+            display:flex; align-items:center; justify-content:center; cursor:pointer; color:#333; margin-bottom:10px;
+        }
+        .answer-btn:hover:not(:disabled) { background:#FFFDE7; border-color:var(--kuning-emas); transform:translateY(-3px); box-shadow:0 7px 0 #ccc,var(--shadow-soft); }
+        .answer-btn:active:not(:disabled) { transform:translateY(1px); box-shadow:0 2px 0 #ccc; }
+        .answer-btn:disabled { cursor:not-allowed; opacity:0.85; }
+        .answer-btn.correct { background:#d4edda!important; border-color:#28a745!important; box-shadow:0 4px 0 #1e7e34!important; animation:pulse-correct 0.6s ease; }
+        .answer-btn.wrong { background:#f8d7da!important; border-color:#dc3545!important; box-shadow:0 4px 0 #b02a37!important; animation:shake-wrong 0.5s ease; }
+        @keyframes pulse-correct { 0%,100%{transform:scale(1);} 50%{transform:scale(1.05);} }
+        @keyframes shake-wrong { 0%,100%{transform:translateX(0);} 20%{transform:translateX(-8px);} 40%{transform:translateX(8px);} 60%{transform:translateX(-5px);} 80%{transform:translateX(5px);} }
+        .stats-bar { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-bottom:12px; }
+        .stat-chip {
+            background:rgba(255,255,255,0.95); border-radius:50px; padding:8px 18px;
+            font-weight:700; font-size:0.95rem; box-shadow:0 3px 10px rgba(0,0,0,0.1);
+            border:2px solid transparent; display:flex; align-items:center; gap:6px; white-space:nowrap;
+        }
+        .stat-chip.hp { border-color:#FF6B6B; color:#E55555; }
+        .stat-chip.skor { border-color:#FFD700; color:#B8860B; }
+        .stat-chip.timer { border-color:#87CEEB; color:#4682B4; }
+        .stat-chip.level { border-color:#7CCD7C; color:#3A7D3A; }
+        .timer-container { width:100%; height:14px; background:#e9ecef; border-radius:10px; overflow:hidden; margin:10px 0; box-shadow:inset 0 2px 4px rgba(0,0,0,0.1); }
+        .timer-fill { height:100%; border-radius:10px; transition:width 1s linear,background-color 0.5s; background:linear-gradient(90deg,#7CCD7C,#FFD700,#FF6B6B); background-size:300% 100%; }
+        .question-box {
+            background:#FFFDE7; border-radius:20px; padding:1.2rem; margin:16px 0;
+            border:3px dashed var(--kuning-emas); min-height:80px; display:flex;
+            align-items:center; justify-content:center; font-size:1.2rem; text-align:center;
+        }
+        .marble-icon {
+            display:inline-block; width:40px; height:40px; border-radius:50%;
+            background:radial-gradient(circle at 35% 35%,#fff 0%,#87CEEB 40%,#4682B4 100%);
+            box-shadow:inset -3px -3px 8px rgba(0,0,0,0.2),0 4px 8px rgba(0,0,0,0.15); margin:0 4px; vertical-align:middle;
+        }
+        .marble-icon.gold { background:radial-gradient(circle at 35% 35%,#fff 0%,#FFD700 40%,#B8860B 100%); }
+        .marble-icon.green { background:radial-gradient(circle at 35% 35%,#fff 0%,#7CCD7C 40%,#3A7D3A 100%); }
+        .feedback-popup {
+            position:fixed; top:50%; left:50%; transform:translate(-50%,-50%) scale(0);
+            font-family:'Fredoka One'; font-size:2.5rem; padding:20px 40px; border-radius:30px;
+            z-index:9999; pointer-events:none; opacity:0; transition:all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+        }
+        .feedback-popup.show { transform:translate(-50%,-50%) scale(1); opacity:1; }
+        .feedback-popup.benar { background:rgba(40,167,69,0.95); color:#fff; box-shadow:0 0 40px rgba(40,167,69,0.6); }
+        .feedback-popup.salah { background:rgba(220,53,69,0.95); color:#fff; box-shadow:0 0 40px rgba(220,53,69,0.6); }
+        .bgm-toggle {
+            position:fixed; bottom:16px; right:16px; z-index:999; width:56px; height:56px;
+            border-radius:50%; border:3px solid #fff; background:linear-gradient(180deg,#C084FC,#A855F7);
+            color:#fff; font-size:1.4rem; display:flex; align-items:center; justify-content:center;
+            box-shadow:var(--shadow-soft); cursor:pointer; transition:all 0.3s ease;
+        }
+        .bgm-toggle:hover { transform:scale(1.1) rotate(10deg); }
+        .bgm-toggle.off { background:#6c757d; opacity:0.7; }
+        .score-big { font-family:'Fredoka One'; font-size:4rem; color:#E67E22; text-shadow:3px 3px 0 #FFD700; line-height:1; }
+        .difficulty-card { border-radius:20px; padding:1.2rem; cursor:pointer; transition:all 0.25s ease; border:3px solid transparent; text-align:center; }
+        .difficulty-card:hover { transform:translateY(-6px); box-shadow:var(--shadow-hover); }
+        .difficulty-card.level-1 { background:linear-gradient(135deg,#d4edda,#a8e6cf); border-color:#7CCD7C; }
+        .difficulty-card.level-2 { background:linear-gradient(135deg,#FFF3CD,#FFE69C); border-color:#FFD700; }
+        .difficulty-card.level-3 { background:linear-gradient(135deg,#f8d7da,#f5b7b1); border-color:#FF6B6B; }
+        .difficulty-card h4 { font-family:'Fredoka One'; margin-bottom:4px; }
+        @media (max-width:576px) {
+            .game-title{font-size:1.5rem;} .btn-kids{font-size:1rem;padding:10px 24px;min-height:48px;}
+            .answer-btn{font-size:1rem;padding:14px 12px;min-height:54px;}
+            .stat-chip{font-size:0.8rem;padding:6px 12px;} .feedback-popup{font-size:1.8rem;padding:16px 28px;}
+            .score-big{font-size:3rem;}
+        }
+        @media (orientation:landscape) and (max-height:600px) {
+            .game-wrapper{max-width:1000px;} .kids-card{padding:1rem 1.5rem;}
+            .question-box{min-height:50px;padding:0.8rem;margin:8px 0;}
+            .answer-btn{min-height:48px;padding:10px;margin-bottom:6px;}
+        }
+    </style>
+</head>
+<body>
+
+<!-- SCREEN 1: START -->
+<div class="screen active" id="screenStart">
+    <div class="game-wrapper">
+        <div class="kids-card text-center">
+            <div class="mb-2">
+                <span class="marble-icon" style="width:50px;height:50px;"></span>
+                <span class="marble-icon gold" style="width:60px;height:60px;"></span>
+                <span class="marble-icon green" style="width:50px;height:50px;"></span>
+            </div>
+            <h1 class="game-title mb-2">Kelereng Nusantara</h1>
+            <p class="subtitle mb-4">Petualangan Matematika Seru!</p>
+            <div class="mb-4">
+                <label for="inputNama" class="form-label fw-bold" style="color:#5D4037;font-size:1.1rem;">Siapa namamu, sahabat?</label>
+                <input type="text" class="form-control form-control-lg text-center rounded-pill border-3" id="inputNama"
+                    placeholder="Tulis namamu di sini..." maxlength="20"
+                    style="font-family:'Comic Neue';font-weight:700;border-color:#FFD700;font-size:1.1rem;padding:14px 20px;">
+            </div>
+            <button class="btn-kids btn-kuning" id="btnMulai" style="font-size:1.3rem;padding:16px 48px;">🎯 Mulai Bermain!</button>
+            <p class="mt-4 mb-0" style="color:#8B7355;font-size:0.9rem;">🏆 Mainkan kelereng tradisional sambil belajar matematika!</p>
+        </div>
+    </div>
+</div>
+
+<!-- SCREEN 2: WELCOME / DIFFICULTY -->
+<div class="screen" id="screenWelcome">
+    <div class="game-wrapper">
+        <div class="kids-card text-center">
+            <div class="mb-3"><span class="marble-icon gold" style="width:55px;height:55px;"></span></div>
+            <h2 class="game-title" style="font-size:1.8rem;" id="welcomeText">Selamat datang!</h2>
+            <p class="subtitle mb-4">Pilih tingkat kesulitanmu, ya!</p>
+            <div class="row g-3">
+                <div class="col-12 col-md-4">
+                    <div class="difficulty-card level-1" id="btnLevel1">
+                        <span style="font-size:2rem;">🟢</span><h4>Level 1</h4>
+                        <p class="mb-0 fw-bold" style="color:#3A7D3A;">Mudah</p>
+                        <small style="color:#555;">Soal dasar & hitungan sederhana</small>
+                        <div class="mt-2"><span class="badge bg-success">30 detik/soal</span></div>
+                    </div>
+                </div>
+                <div class="col-12 col-md-4">
+                    <div class="difficulty-card level-2" id="btnLevel2">
+                        <span style="font-size:2rem;">🟡</span><h4>Level 2</h4>
+                        <p class="mb-0 fw-bold" style="color:#B8860B;">Menengah</p>
+                        <small style="color:#555;">Pola & operasi campuran</small>
+                        <div class="mt-2"><span class="badge bg-warning text-dark">20 detik/soal</span></div>
+                    </div>
+                </div>
+                <div class="col-12 col-md-4">
+                    <div class="difficulty-card level-3" id="btnLevel3">
+                        <span style="font-size:2rem;">🔴</span><h4>Level 3</h4>
+                        <p class="mb-0 fw-bold" style="color:#E55555;">Sulit</p>
+                        <small style="color:#555;">Soal cerita & logika</small>
+                        <div class="mt-2"><span class="badge bg-danger">15 detik/soal</span></div>
+                    </div>
+                </div>
+            </div>
+            <p class="mt-4 mb-0" style="color:#8B7355;font-size:0.85rem;">Setiap jawaban benar = 1 kelereng emas! Kumpulkan sebanyak mungkin!</p>
+        </div>
+    </div>
+</div>
+
+<!-- SCREEN 3: GAMEPLAY -->
+<div class="screen" id="screenGame">
+    <div class="game-wrapper">
+        <div class="kids-card" style="padding:1rem;">
+            <div class="stats-bar">
+                <div class="stat-chip level" id="statLevel"><span>📚</span> Level <span id="levelNum">1</span></div>
+                <div class="stat-chip hp" id="statHP"><span>❤️</span> <span id="hpValue">3</span></div>
+                <div class="stat-chip skor" id="statSkor"><span>🟡</span> <span id="skorValue">0</span></div>
+                <div class="stat-chip timer" id="statTimer"><span>⏱️</span> <span id="timerValue">30</span>s</div>
+            </div>
+            <div class="text-center mb-2">
+                <span class="fw-bold" style="color:#6B8E23;" id="playerNameDisplay">Pemain</span>
+                <span style="color:#999;"> • Soal </span><span class="fw-bold" id="questionCounter">1/10</span>
+            </div>
+            <div class="timer-container"><div class="timer-fill" id="timerFill" style="width:100%;"></div></div>
+            <div class="question-box" id="questionBox">Memuat soal...</div>
+            <div id="answersContainer">
+                <div class="row g-2">
+                    <div class="col-12 col-md-6"><button class="answer-btn" data-index="0" id="ans0"></button></div>
+                    <div class="col-12 col-md-6"><button class="answer-btn" data-index="1" id="ans1"></button></div>
+                    <div class="col-12 col-md-6"><button class="answer-btn" data-index="2" id="ans2"></button></div>
+                    <div class="col-12 col-md-6"><button class="answer-btn" data-index="3" id="ans3"></button></div>
+                </div>
+            </div>
+            <div class="text-center mt-3" id="progressMarbles"></div>
+        </div>
+    </div>
+</div>
+
+<!-- SCREEN 4: RESULT -->
+<div class="screen" id="screenResult">
+    <div class="game-wrapper">
+        <div class="kids-card text-center">
+            <div class="mb-3" id="resultEmoji" style="font-size:4rem;">🏆</div>
+            <h2 class="game-title" style="font-size:2rem;" id="resultTitle">Hebat!</h2>
+            <p class="subtitle mb-4" id="resultMessage">Kamu luar biasa!</p>
+            <div class="row g-3 mb-4">
+                <div class="col-6">
+                    <div class="p-3 rounded-4" style="background:#FFFDE7;border:3px solid #FFD700;">
+                        <small class="fw-bold" style="color:#B8860B;">SKOR TOTAL</small>
+                        <div class="score-big" id="finalScore">0</div><small style="color:#999;">poin</small>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="p-3 rounded-4" style="background:#E8F5E9;border:3px solid #7CCD7C;">
+                        <small class="fw-bold" style="color:#3A7D3A;">AKURASI</small>
+                        <div class="score-big" id="finalAccuracy" style="font-size:3rem;color:#3A7D3A;">0%</div>
+                        <small style="color:#999;" id="accuracyDetail">0/0 benar</small>
+                    </div>
+                </div>
+            </div>
+            <div class="mb-4" id="finalMarblesDisplay"></div>
+            <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                <button class="btn-kids btn-hijau" id="btnMainLagi">🔄 Main Lagi</button>
+                <button class="btn-kids btn-biru" id="btnKeMenu">🏠 Menu Utama</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<button class="bgm-toggle" id="bgmToggle" title="Musik Latar">🔊</button>
+<div class="feedback-popup" id="feedbackPopup"></div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+const GameApp = (function() {
+    'use strict';
+    const state = {
+        playerName:'', currentLevel:1, score:0, hp:3, maxHp:3,
+        correctCount:0, totalAnswered:0, questionIndex:0, totalQuestions:10,
+        timeLimit:30, timeLeft:30, timerInterval:null, isAnswered:false,
+        bgmPlaying:false, currentQuestion:null, usedIndices:[]
+    };
+    let bgmAudio, clickSound, correctSound, wrongSound, celebrationSound;
+    function initAudio() {
+        try {
+            bgmAudio = new Audio('https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=happy-day-113985.mp3');
+            bgmAudio.loop = true; bgmAudio.volume = 0.2;
+            clickSound = new Audio('https://cdn.pixabay.com/download/audio/2022/03/15/audio_9f0e3f0b1c.mp3?filename=click-124467.mp3');
+            clickSound.volume = 0.5;
+            correctSound = new Audio('https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a73467.mp3?filename=correct-2-46134.mp3');
+            correctSound.volume = 0.6;
+            wrongSound = new Audio('https://cdn.pixabay.com/download/audio/2022/03/15/audio_1b4d5d5a3b.mp3?filename=wrong-47985.mp3');
+            wrongSound.volume = 0.5;
+        } catch(e) { console.warn('Audio error:', e); }
+    }
+    function playSound(s) { if(!s) return; try { s.currentTime = 0; s.play().catch(()=>{}); } catch(e){} }
+    function toggleBGM() {
+        state.bgmPlaying = !state.bgmPlaying;
+        const btn = document.getElementById('bgmToggle');
+        if (state.bgmPlaying && bgmAudio) { bgmAudio.play().catch(()=>{}); btn.textContent='🔊'; btn.classList.remove('off'); }
+        else if (bgmAudio) { bgmAudio.pause(); btn.textContent='🔇'; btn.classList.add('off'); }
+    }
+    const questionBank = {
+        1: [
+            { q:'Hasil dari $12 + 7$ adalah...', options:['18','19','20','17'], answer:1 },
+            { q:'Hasil dari $25 - 8$ adalah...', options:['16','18','17','15'], answer:2 },
+            { q:'Hasil dari $4 \\times 6$ adalah...', options:['20','24','28','22'], answer:1 },
+            { q:'Hasil dari $36 \\div 4$ adalah...', options:['7','8','9','6'], answer:2 },
+            { q:'Bentuk desimal dari $\\frac{1}{2}$ adalah...', options:['0,2','0,5','1,2','2,0'], answer:1 },
+            { q:'Hasil dari $15 + 23$ adalah...', options:['36','38','37','39'], answer:1 },
+            { q:'Hasil dari $50 - 17$ adalah...', options:['32','33','34','31'], answer:1 },
+            { q:'Hasil dari $7 \\times 8$ adalah...', options:['54','56','58','52'], answer:1 },
+            { q:'Hasil dari $81 \\div 9$ adalah...', options:['8','9','10','7'], answer:1 },
+            { q:'Bentuk pecahan dari $0{,}25$ adalah...', options:['$\\frac{1}{2}$','$\\frac{1}{4}$','$\\frac{1}{5}$','$\\frac{2}{5}$'], answer:1 }
+        ],
+        2: [
+            { q:'Hasil dari $15 + 6 \\times 4$ adalah...', options:['39','36','40','42'], answer:0 },
+            { q:'Pola bilangan: 3, 6, 12, 24, ... Bilangan berikutnya adalah...', options:['36','48','30','42'], answer:1 },
+            { q:'Hasil dari $(8 + 4) \\times 3$ adalah...', options:['36','32','28','40'], answer:0 },
+            { q:'Hasil dari $45 - 12 \\div 4$ adalah...', options:['42','40','38','44'], answer:0 },
+            { q:'Hasil dari $\\frac{3}{4} + \\frac{1}{4}$ adalah...', options:['$\\frac{1}{2}$','1','$\\frac{4}{8}$','$\\frac{2}{4}$'], answer:1 },
+            { q:'Jika $x + 15 = 27$, maka nilai $x$ adalah...', options:['10','12','14','11'], answer:1 },
+            { q:'Pola bilangan: 2, 4, 8, 16, ... Bilangan berikutnya adalah...', options:['24','32','28','20'], answer:1 },
+            { q:'Hasil dari $100 - 45 + 20$ adalah...', options:['75','70','80','85'], answer:0 },
+            { q:'Hasil dari $\\frac{2}{5} + \\frac{1}{5}$ adalah...', options:['$\\frac{3}{5}$','$\\frac{3}{10}$','$\\frac{2}{10}$','$\\frac{1}{5}$'], answer:0 },
+            { q:'Keliling persegi dengan sisi 7 cm adalah...', options:['28 cm','21 cm','14 cm','35 cm'], answer:0 }
+        ],
+        3: [
+            { q:'Ibu membeli 3 kg gula. Sebanyak $\\frac{3}{4}$ kg digunakan untuk membuat kue. Sisa gula Ibu adalah...', options:['$\\frac{1}{4}$ kg','$\\frac{1}{2}$ kg','$\\frac{2}{3}$ kg','$\\frac{3}{4}$ kg'], answer:1 },
+            { q:'Sebuah segitiga memiliki alas 12 cm dan tinggi 8 cm. Luas segitiga tersebut adalah...', options:['24 cm²','36 cm²','48 cm²','96 cm²'], answer:2 },
+            { q:'Toko memberi diskon 10% untuk buku Rp80.000. Harga setelah diskon adalah...', options:['Rp70.000','Rp72.000','Rp74.000','Rp76.000'], answer:1 },
+            { q:'Rani menabung Rp7.500 setiap hari selama 6 hari. Ia menggunakan Rp15.000. Sisa uang Rani adalah...', options:['Rp25.000','Rp30.000','Rp35.000','Rp40.000'], answer:1 },
+            { q:'Sebuah kelas memiliki 36 siswa. $\\frac{1}{3}$ mengikuti lomba Matematika. Berapa siswa yang ikut lomba?', options:['10','11','12','13'], answer:2 },
+            { q:'Ayah menempuh 240 km. Pagi hari sudah 150 km. Berapa km lagi yang harus ditempuh?', options:['80 km','85 km','90 km','95 km'], answer:2 },
+            { q:'8 kotak kue, setiap kotak 24 kue. Jika 35 kue terjual, sisa kue adalah...', options:['147','150','155','157'], answer:3 },
+            { q:'Perpustakaan punya 350 buku. 125 dipinjam, lalu dapat tambahan 75. Jumlah buku sekarang...', options:['275','300','325','350'], answer:1 },
+            { q:'Ibu membeli 4 kg gula Rp16.000/kg. Uang yang harus dibayar...', options:['Rp48.000','Rp56.000','Rp64.000','Rp60.000'], answer:2 },
+            { q:'Data tinggi: Rani 135, Sinta 140, Doni 132, Budi 145, Andi 138. Yang paling tinggi adalah...', options:['Rani','Sinta','Doni','Budi'], answer:3 }
+        ]
+    };
+    const $ = id => document.getElementById(id);
+    function showScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        $(id).classList.add('active');
+        window.scrollTo({ top:0, behavior:'smooth' });
+    }
+    function showFeedback(text, type) {
+        const popup = $('feedbackPopup');
+        popup.textContent = text;
+        popup.className = 'feedback-popup ' + type;
+        popup.classList.add('show');
+        setTimeout(() => popup.classList.remove('show'), 1000);
+    }
+    function updateStats() {
+        $('hpValue').textContent = state.hp;
+        $('skorValue').textContent = state.score;
+        $('timerValue').textContent = state.timeLeft;
+        $('levelNum').textContent = state.currentLevel;
+        $('questionCounter').textContent = (state.questionIndex + 1) + '/' + state.totalQuestions;
+    }
+    function updateProgressMarbles() {
+        const container = $('progressMarbles');
+        container.innerHTML = '';
+        for (let i = 0; i < state.totalQuestions; i++) {
+            const icon = document.createElement('span');
+            icon.className = 'marble-icon' + (i < state.correctCount ? ' gold' : (i < state.totalAnswered ? ' green' : ''));
+            icon.style.width = '28px'; icon.style.height = '28px';
+            if (i >= state.totalAnswered && i >= state.correctCount) icon.style.opacity = '0.3';
+            container.appendChild(icon);
+        }
+    }
+    function startTimer() {
+        clearInterval(state.timerInterval);
+        state.timeLeft = state.timeLimit;
+        $('timerFill').style.width = '100%';
+        updateStats();
+        state.timerInterval = setInterval(() => {
+            state.timeLeft--;
+            $('timerValue').textContent = state.timeLeft;
+            const pct = (state.timeLeft / state.timeLimit) * 100;
+            $('timerFill').style.width = pct + '%';
+            if (state.timeLeft <= 0) { clearInterval(state.timerInterval); handleTimeout(); }
+        }, 1000);
+    }
+    function handleTimeout() {
+        if (state.isAnswered) return;
+        state.isAnswered = true;
+        state.hp--; state.totalAnswered++;
+        updateStats();
+        playSound(wrongSound);
+        showFeedback('⏰ Waktu Habis!', 'salah');
+        $('questionBox').innerHTML = '<span style="color:#dc3545;font-weight:700;">⏰ Waktu habis! Jawaban: ' + state.currentQuestion.options[state.currentQuestion.answer] + '</span>';
+        document.querySelectorAll('.answer-btn').forEach(btn => {
+            btn.disabled = true;
+            if (parseInt(btn.dataset.index) === state.currentQuestion.answer) btn.classList.add('correct');
+        });
+        updateProgressMarbles();
+        if (state.hp <= 0) { setTimeout(endGame, 1200); } else { setTimeout(nextQuestion, 1500); }
+    }
+    function loadQuestion() {
+        const bank = questionBank[state.currentLevel];
+        let idx;
+        do { idx = Math.floor(Math.random() * bank.length); } while (state.usedIndices.includes(idx) && state.usedIndices.length < bank.length);
+        state.usedIndices.push(idx);
+        state.currentQuestion = bank[idx];
+        state.isAnswered = false;
+        const qBox = $('questionBox');
+        qBox.innerHTML = state.currentQuestion.q;
+        if (window.MathJax && MathJax.typesetPromise) { MathJax.typesetPromise([qBox]).catch(()=>{}); }
+        const options = [...state.currentQuestion.options];
+        const correctAnswer = state.currentQuestion.options[state.currentQuestion.answer];
+        // Shuffle
+        for (let i = options.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [options[i], options[j]] = [options[j], options[i]];
+        }
+        const newAnswerIndex = options.indexOf(correctAnswer);
+        state.currentQuestion.answer = newAnswerIndex;
+        state.currentQuestion.options = options;
+        for (let i = 0; i < 4; i++) {
+            const btn = $('ans' + i);
+            btn.className = 'answer-btn';
+            btn.disabled = false;
+            btn.innerHTML = options[i];
+            btn.dataset.index = i;
+        }
+        if (window.MathJax && MathJax.typesetPromise) { MathJax.typesetPromise([$('answersContainer')]).catch(()=>{}); }
+        state.timeLimit = state.currentLevel === 1 ? 30 : state.currentLevel === 2 ? 20 : 15;
+        startTimer();
+        updateStats(); updateProgressMarbles();
+    }
+    function handleAnswer(selectedIndex) {
+        if (state.isAnswered) return;
+        state.isAnswered = true;
+        clearInterval(state.timerInterval);
+        const isCorrect = selectedIndex === state.currentQuestion.answer;
+        const btn = $('ans' + selectedIndex);
+        state.totalAnswered++;
+        if (isCorrect) {
+            state.correctCount++; state.score += 10 + state.timeLeft; // Bonus kecepatan
+            btn.classList.add('correct');
+            playSound(correctSound);
+            showFeedback('✅ Benar!', 'benar');
+        } else {
+            state.hp--; btn.classList.add('wrong');
+            playSound(wrongSound); showFeedback('❌ Salah!', 'salah');
+        }
+        document.querySelectorAll('.answer-btn').forEach(b => b.disabled = true);
+        if (!isCorrect) { $('ans' + state.currentQuestion.answer).classList.add('correct'); }
+        updateStats(); updateProgressMarbles();
+        if (state.hp <= 0) { setTimeout(endGame, 1200); } else { setTimeout(nextQuestion, 1500); }
+    }
+    function nextQuestion() {
+        state.questionIndex++;
+        state.usedIndices = [];
+        if (state.questionIndex >= state.totalQuestions) { endGame(); } else { loadQuestion(); }
+    }
+    function endGame() {
+        clearInterval(state.timerInterval);
+        if (bgmAudio) bgmAudio.pause();
+        const accuracy = state.totalAnswered > 0 ? Math.round((state.correctCount / state.totalAnswered) * 100) : 0;
+        $('finalScore').textContent = state.score;
+        $('finalAccuracy').textContent = accuracy + '%';
+        $('accuracyDetail').textContent = state.correctCount + '/' + state.totalAnswered + ' benar';
+        let emoji, title, msg;
+        if (accuracy >= 80) { emoji='🏆'; title='Luar Biasa!'; msg='Kamu hebat sekali, ' + state.playerName + '!'; }
+        else if (accuracy >= 60) { emoji='😊'; title='Bagus!'; msg='Terus semangat belajar, ' + state.playerName + '!'; }
+        else { emoji='💪'; title='Jangan Menyerah!'; msg='Ayo coba lagi, ' + state.playerName + '!'; }
+        $('resultEmoji').textContent = emoji;
+        $('resultTitle').textContent = title;
+        $('resultMessage').textContent = msg;
+        const marbleDisplay = $('finalMarblesDisplay');
+        marbleDisplay.innerHTML = '';
+        for (let i = 0; i < Math.min(state.correctCount, 20); i++) {
+            const span = document.createElement('span');
+            span.className = 'marble-icon gold'; span.style.width='24px'; span.style.height='24px';
+            marbleDisplay.appendChild(span);
+        }
+        if (state.correctCount > 20) marbleDisplay.innerHTML += ' +' + (state.correctCount - 20);
+        showScreen('screenResult');
+        setTimeout(() => { playSound(correctSound); }, 300);
+    }
+    function resetGame() {
+        state.score=0; state.hp=3; state.correctCount=0; state.totalAnswered=0;
+        state.questionIndex=0; state.usedIndices=[]; state.isAnswered=false; state.timeLeft=30;
+        clearInterval(state.timerInterval);
+        $('bgmToggle').textContent='🔊'; $('bgmToggle').classList.remove('off');
+        state.bgmPlaying=false;
+    }
+    // EVENT LISTENERS
+    $('btnMulai').addEventListener('click', () => {
+        const name = $('inputNama').value.trim();
+        if (!name) { $('inputNama').style.borderColor = '#FF6B6B'; $('inputNama').placeholder = 'Isi namamu dulu ya!'; return; }
+        state.playerName = name;
+        $('welcomeText').textContent = 'Selamat datang, ' + name + '!';
+        $('playerNameDisplay').textContent = name;
+        showScreen('screenWelcome');
+        initAudio();
+        if (bgmAudio) { bgmAudio.play().catch(()=>{}); state.bgmPlaying = true; }
+    });
+    $('btnLevel1').addEventListener('click', () => { resetGame(); state.currentLevel=1; showScreen('screenGame'); loadQuestion(); });
+    $('btnLevel2').addEventListener('click', () => { resetGame(); state.currentLevel=2; showScreen('screenGame'); loadQuestion(); });
+    $('btnLevel3').addEventListener('click', () => { resetGame(); state.currentLevel=3; showScreen('screenGame'); loadQuestion(); });
+    document.querySelectorAll('.answer-btn').forEach(btn => {
+        btn.addEventListener('click', function() { handleAnswer(parseInt(this.dataset.index)); });
+    });
+    $('btnMainLagi').addEventListener('click', () => { resetGame(); showScreen('screenWelcome'); });
+    $('btnKeMenu').addEventListener('click', () => { resetGame(); showScreen('screenStart'); $('inputNama').value=''; });
+    $('bgmToggle').addEventListener('click', toggleBGM);
+    return { init: () => {} };
+})();
+</script>
+</body>
+</html>
